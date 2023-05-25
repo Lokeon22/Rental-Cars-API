@@ -9,7 +9,7 @@ class CarsImageController {
     const car = await knex("cars_image").where({ car_id: id }).first();
 
     car
-      ? await knex("cars_image").update({
+      ? await knex("cars_image").where({car_id: id}).update({
           image_name: image_name ?? car.image_name,
         })
       : await knex("cars_image").insert({
