@@ -3,11 +3,14 @@ import { Request, Response } from "express";
 import { AppError } from "../utils/AppError";
 
 import { Car, CarImage } from "../types/Car";
+import { UserProps } from "../types/User";
 
 type CarCategorie = Pick<Car, "id" | "name" | "description" | "created_at">;
 
 class CarsController {
   async create(req: Request, res: Response) {
+    const id = req.user.id;
+
     const {
       name,
       description,
@@ -19,6 +22,12 @@ class CarsController {
       category_name,
       category_description,
     }: Car = req.body;
+
+    const user: UserProps = await knex("users").where({ id }).first();
+
+    if (!!user.is_admin === false) {
+      throw new AppError("Usuário sem permissão");
+    }
 
     if (
       !name ||
@@ -103,6 +112,7 @@ class CarsController {
   }
 
   async update(req: Request, res: Response) {
+    const user_id = req.user.id;
     const { id } = req.params;
 
     const {
@@ -116,6 +126,12 @@ class CarsController {
       category_name,
       category_description,
     }: Car = req.body;
+
+    const user: UserProps = await knex("users").where({ id: user_id }).first();
+
+    if (!!user.is_admin === false) {
+      throw new AppError("Usuário sem permissão");
+    }
 
     const [car]: Car[] = await knex("cars").where({ id });
 
@@ -148,7 +164,14 @@ class CarsController {
   }
 
   async delete(req: Request, res: Response) {
+    const user_id = req.user.id;
     const { id } = req.params;
+
+    const user: UserProps = await knex("users").where({ id: user_id }).first();
+
+    if (!!user.is_admin === false) {
+      throw new AppError("Usuário sem permissão");
+    }
 
     const car = await knex("cars").where({ id }).first();
 
