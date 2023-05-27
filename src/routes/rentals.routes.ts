@@ -5,6 +5,6 @@ const rentalsRouter = Router();
 
 const rentalsController = new RentalsController();
 
-rentalsRouter.use("/rental", rentalsController.create);
+rentalsRouter.get("/rent/:id", rentalsController.create);
 
 export { rentalsRouter };

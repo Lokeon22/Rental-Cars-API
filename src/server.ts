@@ -1,11 +1,15 @@
 require("express-async-errors");
 import express, { Request, Response, NextFunction } from "express";
 import { AppError } from "./utils/AppError";
+import { UPLOADS_FOLDER } from "./configs/upload";
 import { routes } from "./routes";
 
 const app = express();
 
 app.use(express.json());
+
+app.use("/files", express.static(UPLOADS_FOLDER));
+
 app.use(routes);
 
 const PORT = 8080;
