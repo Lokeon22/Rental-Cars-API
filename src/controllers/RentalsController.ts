@@ -15,7 +15,7 @@ class RentalsController {
       throw new AppError("Preencha todos os campos");
     }
 
-    return res.json({ message: start_date });
+    return res.json();
   }
 }
 
