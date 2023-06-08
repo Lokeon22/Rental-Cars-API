@@ -18,3 +18,10 @@ export interface CarImage {
   image_name: string;
   created_at: Date;
 }
+
+export interface CarCategorie {
+  car_id: number;
+  category_name: string;
+  category_description: string;
+  created_at: Date;
+}
