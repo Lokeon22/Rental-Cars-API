@@ -5,6 +5,9 @@ const rentalsRouter = Router();
 
 const rentalsController = new RentalsController();
 
-rentalsRouter.get("/rent/:id", rentalsController.create);
+import { ensureAuth } from "../middleware";
+
+rentalsRouter.post("/rent/:car_id", ensureAuth, rentalsController.create);
+rentalsRouter.get("/rents", ensureAuth, rentalsController.show);
 
 export { rentalsRouter };

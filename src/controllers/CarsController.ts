@@ -2,10 +2,8 @@ import { connection as knex } from "../database/knex";
 import { Request, Response } from "express";
 import { AppError } from "../utils/AppError";
 
-import { Car, CarImage } from "../types/Car";
+import { Car, CarImage, CarCategorie } from "../types/Car";
 import { UserProps } from "../types/User";
-
-type CarCategorie = Pick<Car, "id" | "name" | "description" | "created_at">;
 
 class CarsController {
   async create(req: Request, res: Response) {
@@ -58,9 +56,9 @@ class CarsController {
     });
 
     await knex("categories").insert({
-      id: car_id,
-      name: category_name,
-      description: category_description,
+      car_id,
+      category_name,
+      category_description,
     });
 
     return res.json({ message: "Carro adicionado no sistema" });
@@ -75,7 +73,7 @@ class CarsController {
       let filtered_image = images.filter((image) => image.car_id === car.id);
 
       let [filtered_categorie] = categories.filter(
-        (categorie) => categorie.id === car.id
+        (categorie) => categorie.car_id === car.id
       );
 
       return {
@@ -94,21 +92,18 @@ class CarsController {
     const [car]: Car[] = await knex("cars")
       .whereLike("name", `%${name}%`)
       .whereLike("brand", `%${brand}%`)
-      .whereLike("license_plate", `%${license_plate}%`);
+      .whereLike("license_plate", `%${license_plate}%`)
+      .innerJoin("categories", "categories.car_id", "cars.id");
 
     if (!car) {
-      return res.json({ message: "Nenhum carro encontrado" });
+      throw new AppError("Nenhum carro encontrado");
     }
 
-    const image: CarImage[] = await knex("cars_image").where({
+    const [carImage]: CarImage[] = await knex("cars_image").where({
       car_id: car.id,
     });
 
-    const [category]: CarCategorie[] = await knex("categories").where({
-      id: car.id,
-    });
-
-    return res.json({ car, image: image ?? [], category });
+    return res.json({ car, carImage: carImage ?? [] });
   }
 
   async update(req: Request, res: Response) {
@@ -135,7 +130,9 @@ class CarsController {
 
     const [car]: Car[] = await knex("cars").where({ id });
 
-    const [categorie]: CarCategorie[] = await knex("categories").where({ id });
+    const [categorie]: CarCategorie[] = await knex("categories").where({
+      car_id: id,
+    });
 
     if (!car) {
       throw new AppError("Carro não encontrado");
@@ -154,10 +151,11 @@ class CarsController {
       });
 
     await knex("categories")
-      .where({ id })
+      .where({ car_id: id })
       .update({
-        name: category_name ?? categorie.name,
-        description: category_description ?? categorie.description,
+        category_name: category_name ?? categorie.category_name,
+        category_description:
+          category_description ?? categorie.category_description,
       });
 
     return res.json({ message: "Carro atualizado" });
