@@ -30,7 +30,6 @@ class CarsController {
     if (
       !name ||
       !daily_rate ||
-      !available ||
       !license_plate ||
       !brand ||
       !category_name ||
