@@ -1,4 +1,5 @@
-import { UserRepository, UserUpdate } from "../repositories/UserRepository";
+import { UserRepository } from "../repositories/UserRepository";
+import { UserUpdate } from "../types/User";
 import { Request } from "express";
 import { compare, hash } from "bcrypt";
 import { AppError } from "../utils/AppError";

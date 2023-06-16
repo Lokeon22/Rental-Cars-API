@@ -51,7 +51,6 @@ class CarCreateService {
       fine_amount,
       category_name,
       category_description,
-      user_id,
     });
 
     return { id: create_car };

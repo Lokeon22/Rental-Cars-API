@@ -1,12 +1,11 @@
-import { connection as knex } from "../database/knex";
 import { Request, Response } from "express";
-import { AppError } from "../utils/AppError";
 
 import { CarRepository } from "../repositories/CarRepository";
 import { CarCreateService } from "../services/CarCreateService";
+import { CarUpdateDeleteService } from "../services/CarUpdateDeleteService";
 
-import { Car, CarImage, CarCategorie } from "../types/Car";
-import { UserProps } from "../types/User";
+import { Car } from "../types/Car";
+import { CarDetailsService } from "../services/CarDetailsService";
 
 class CarsController {
   async create(req: Request, res: Response) {
@@ -44,21 +43,10 @@ class CarsController {
   }
 
   async show(req: Request, res: Response) {
-    const cars: Car[] = await knex("cars");
-    const images: CarImage[] = await knex("cars_image");
-    const categories: CarCategorie[] = await knex("categories");
+    const carRepository = new CarRepository();
+    const carShowService = new CarDetailsService(carRepository);
 
-    const carsWithProps = cars.map((car) => {
-      let filtered_image = images.filter((image) => image.car_id === car.id);
-
-      let [filtered_categorie] = categories.filter((categorie) => categorie.car_id === car.id);
-
-      return {
-        ...car,
-        image: filtered_image ?? [],
-        category: filtered_categorie,
-      };
-    });
+    const { carsWithProps } = await carShowService.executeAll();
 
     return res.json(carsWithProps);
   }
@@ -66,19 +54,10 @@ class CarsController {
   async index(req: Request, res: Response) {
     const { name, brand, license_plate } = req.query;
 
-    const [car]: Car[] = await knex("cars")
-      .whereLike("name", `%${name}%`)
-      .whereLike("brand", `%${brand}%`)
-      .whereLike("license_plate", `%${license_plate}%`)
-      .innerJoin("categories", "categories.car_id", "cars.id");
+    const carRepository = new CarRepository();
+    const carShowService = new CarDetailsService(carRepository);
 
-    if (!car) {
-      throw new AppError("Nenhum carro encontrado");
-    }
-
-    const [carImage]: CarImage[] = await knex("cars_image").where({
-      car_id: car.id,
-    });
+    const { car, carImage } = await carShowService.executeFiltered({ name, brand, license_plate });
 
     return res.json({ car, carImage: carImage ?? [] });
   }
@@ -99,40 +78,22 @@ class CarsController {
       category_description,
     }: Car = req.body;
 
-    const user: UserProps = await knex("users").where({ id: user_id }).first();
+    const carRepository = new CarRepository();
+    const carUpdateDeleteService = new CarUpdateDeleteService(carRepository);
 
-    if (!!user.is_admin === false) {
-      throw new AppError("Usuário sem permissão");
-    }
-
-    const [car]: Car[] = await knex("cars").where({ id });
-
-    const [categorie]: CarCategorie[] = await knex("categories").where({
-      car_id: id,
+    await carUpdateDeleteService.executeUpdate({
+      user_id,
+      id,
+      name,
+      description,
+      daily_rate,
+      available,
+      license_plate,
+      fine_amount,
+      brand,
+      category_name,
+      category_description,
     });
-
-    if (!car) {
-      throw new AppError("Carro não encontrado");
-    }
-
-    await knex("cars")
-      .where({ id })
-      .update({
-        name: name ?? car.name,
-        description: description ?? car.description,
-        daily_rate: daily_rate ?? car.daily_rate,
-        available: available ?? car.available,
-        license_plate: license_plate ?? car.license_plate,
-        fine_amount: fine_amount ?? car.fine_amount,
-        brand: brand ?? car.brand,
-      });
-
-    await knex("categories")
-      .where({ car_id: id })
-      .update({
-        category_name: category_name ?? categorie.category_name,
-        category_description: category_description ?? categorie.category_description,
-      });
 
     return res.json({ message: "Carro atualizado" });
   }
@@ -141,19 +102,10 @@ class CarsController {
     const user_id = req.user.id;
     const { id } = req.params;
 
-    const user: UserProps = await knex("users").where({ id: user_id }).first();
+    const carRepository = new CarRepository();
+    const carUpdateDeleteService = new CarUpdateDeleteService(carRepository);
 
-    if (!!user.is_admin === false) {
-      throw new AppError("Usuário sem permissão");
-    }
-
-    const car = await knex("cars").where({ id }).first();
-
-    if (!car) {
-      throw new AppError("Carro não encontrado");
-    }
-
-    await knex("cars").where({ id }).delete();
+    await carUpdateDeleteService.executeDelete({ user_id, id });
 
     return res.json({ message: "Carro deletado do sistema" });
   }
