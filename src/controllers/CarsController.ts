@@ -2,6 +2,9 @@ import { connection as knex } from "../database/knex";
 import { Request, Response } from "express";
 import { AppError } from "../utils/AppError";
 
+import { CarRepository } from "../repositories/CarRepository";
+import { CarCreateService } from "../services/CarCreateService";
+
 import { Car, CarImage, CarCategorie } from "../types/Car";
 import { UserProps } from "../types/User";
 
@@ -21,30 +24,11 @@ class CarsController {
       category_description,
     }: Car = req.body;
 
-    const user: UserProps = await knex("users").where({ id }).first();
+    const carRepository = new CarRepository();
+    const carCreateService = new CarCreateService(carRepository);
 
-    if (!!user.is_admin === false) {
-      throw new AppError("Usuário sem permissão");
-    }
-
-    if (
-      !name ||
-      !daily_rate ||
-      !license_plate ||
-      !brand ||
-      !category_name ||
-      !category_description
-    ) {
-      throw new AppError("Preencha todos os campos");
-    }
-
-    const verifyCar = await knex("cars").where({ license_plate }).first();
-
-    if (verifyCar) {
-      throw new AppError("Carro já adicionado");
-    }
-
-    const [car_id] = await knex("cars").insert({
+    await carCreateService.execute({
+      user_id: id,
       name,
       description,
       daily_rate,
@@ -52,10 +36,6 @@ class CarsController {
       license_plate,
       fine_amount,
       brand,
-    });
-
-    await knex("categories").insert({
-      car_id,
       category_name,
       category_description,
     });
@@ -71,9 +51,7 @@ class CarsController {
     const carsWithProps = cars.map((car) => {
       let filtered_image = images.filter((image) => image.car_id === car.id);
 
-      let [filtered_categorie] = categories.filter(
-        (categorie) => categorie.car_id === car.id
-      );
+      let [filtered_categorie] = categories.filter((categorie) => categorie.car_id === car.id);
 
       return {
         ...car,
@@ -153,8 +131,7 @@ class CarsController {
       .where({ car_id: id })
       .update({
         category_name: category_name ?? categorie.category_name,
-        category_description:
-          category_description ?? categorie.category_description,
+        category_description: category_description ?? categorie.category_description,
       });
 
     return res.json({ message: "Carro atualizado" });
