@@ -1,20 +1,11 @@
 import { connection as knex } from "../database/knex";
-import { UserProps } from "../types/User";
+import { UserProps, UserUpdate } from "../types/User";
 import { Request } from "express";
 
 export type UserCreate = Pick<
   UserProps,
   "name" | "username" | "password" | "email" | "drive_license"
 >;
-
-export type UserUpdate = {
-  name: string;
-  email: string;
-  username: string;
-  drive_license: string;
-  newpassword?: string;
-  oldpassword?: string;
-};
 
 class UserRepository {
   async verifyEmailExists(email: string) {

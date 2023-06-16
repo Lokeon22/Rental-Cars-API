@@ -9,3 +9,11 @@ export interface Rent {
   created_at: Date;
   updated_at: Date;
 }
+
+export interface RentCreateProps {
+  car_id: string;
+  user_id: number;
+  start_date: Date;
+  end_date: Date;
+  total_price: number;
+}
