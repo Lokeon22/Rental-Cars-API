@@ -9,5 +9,6 @@ import { ensureAuth } from "../middleware";
 
 rentalsRouter.post("/rent/:car_id", ensureAuth, rentalsController.create);
 rentalsRouter.get("/rents", ensureAuth, rentalsController.show);
+rentalsRouter.get("/user/rents", ensureAuth, rentalsController.index);
 
 export { rentalsRouter };

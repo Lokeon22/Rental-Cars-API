@@ -68,6 +68,18 @@ class RentalsController {
 
     return res.json(allrents);
   }
+
+  async index(req: Request, res: Response) {
+    const user_id = req.user.id;
+
+    const rents: Rent = await knex("rentals").where({ user_id }).first();
+
+    if (!rents) {
+      return res.json(false);
+    }
+
+    return res.json(rents);
+  }
 }
 
 export { RentalsController };
