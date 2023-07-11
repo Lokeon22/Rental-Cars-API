@@ -26,7 +26,7 @@ class CarsController {
     const carRepository = new CarRepository();
     const carCreateService = new CarCreateService(carRepository);
 
-    await carCreateService.execute({
+    const car_id = await carCreateService.execute({
       user_id: id,
       name,
       description,
@@ -39,7 +39,7 @@ class CarsController {
       category_description,
     });
 
-    return res.json({ message: "Carro adicionado no sistema" });
+    return res.json({ message: "Carro adicionado no sistema", id: car_id.id.id });
   }
 
   async show(req: Request, res: Response) {
